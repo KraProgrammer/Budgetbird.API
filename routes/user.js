@@ -4,7 +4,57 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 
+
+/**
+ * @title signup Route
+ *
+ * @desc Used to signup new users
+ *
+ * @method POST
+ *
+ * @url /user/signup
+ * @data email
+ * @data password
+ *
+ * @success-code 201
+ * @success-content
+ * {
+ *    token,
+ *    message: 'User created'
+ * }
+ *
+ * @error-code 409
+ * @error-content
+ * {
+ *   message: 'Mail exists'
+ * }
+ */
 router.post('/signup', (req, res, next) => {});
+
+/**
+ * @title login Route
+ *
+ * @desc Used to login users
+ *
+ * @method POST
+ *
+ * @url /user/login
+ * @data email
+ * @data password
+ *
+ * @success-code 201
+ * @success-content
+ * {
+ *    token,
+ *    message: 'Auth successful'
+ * }
+ *
+ * @error-code 401
+ * @error-content
+ * {
+ *   message: 'Auth failed'
+ * }
+ */
 router.post('/login', (req, res, next) => {});
 
 router.get('/:userId', (req, res, next) => {});
