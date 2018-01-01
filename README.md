@@ -137,6 +137,25 @@ message: 'Error Message'
 
 
 
+- **Sample Call:**
+
+  ```javascript
+    POST / journey HTTP / 1.1
+    Host: localhost: 3000
+    Content - Type: application / json
+    Cache - Control: no - cache
+    Postman - Token: 5e8b8445 - 7615 - aa65 - ca72 - 21fc99f64b67
+
+    {
+        "name": "test2",
+        "start": "2018-01-02",
+        "end": "2018-01-07",
+        "description": "desc2",
+        "destination": "Wien",
+        "currency": 1
+    }
+  ```
+
 <br>
 
 
@@ -247,6 +266,36 @@ message: 'Error Message'
 
 
 
+- **Sample Call:**
+
+  ```javascript
+    PATCH / journey / 1 HTTP / 1.1
+    Host: localhost: 3000
+    Content - Type: application / json
+    Cache - Control: no - cache
+    Postman - Token: a1dbe3fe - 9534 - 4bc4 - 8d27 - 2207640a841f
+
+    [{
+        "propName": "journeyname",
+        "value": "change name"
+    }, {
+        "propName": "startdate",
+        "value": "2019-01-02"
+    }, {
+        "propName": "enddate",
+        "value": "2019-01-06"
+    }, {
+        "propName": "description",
+        "value": "change desc"
+    }, {
+        "propName": "destination",
+        "value": "chaange dest"
+    }, {
+        "propName": "defaultcurrencyid",
+        "value": "1"
+    }]
+  ```
+
 <br>
 
 
@@ -283,8 +332,8 @@ message: 'Error Message'
     - **Code:** 200<br>**Content:**
       ```
         {
-            message: 'Successfully removed journey',
-            journey: resultObject
+            "message": "Successfully removed journey",
+            "rowCount": 1
         }
       ```
   
@@ -305,7 +354,7 @@ message: 'Error Message'
 <br>
 
 
-## signup Route ##
+## Signup Route ##
 
 
   #### Used to signup new users ####
@@ -367,7 +416,7 @@ message: 'Mail exists'
 <br>
 
 
-## login Route ##
+## Login Route ##
 
 
   #### Used to login users ####

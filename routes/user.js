@@ -7,7 +7,7 @@ const db = require('../db')
 
 
 /**
- * @title signup Route
+ * @title Signup Route
  *
  * @desc Used to signup new users
  *
@@ -38,7 +38,7 @@ router.post('/signup', (req, res, next) => {
 });
 
 /**
- * @title login Route
+ * @title Login Route
  *
  * @desc Used to login users
  *

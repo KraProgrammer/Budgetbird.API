@@ -113,6 +113,23 @@ router.get('/', (req, res, next) => {
  * {
  *   message: 'Error Message'
  * }
+ * 
+ * @sample-call
+ * POST /journey HTTP/1.1
+ * Host: localhost:3000
+ * Content-Type: application/json
+ * Cache-Control: no-cache
+ * Postman-Token: 5e8b8445-7615-aa65-ca72-21fc99f64b67
+ * 
+ * {
+ * 	"name": "test2",
+ * 	"start": "2018-01-02",
+ * 	"end": "2018-01-07",
+ * 	"description": "desc2",
+ * 	"destination": "Wien",
+ * 	"currency": 1
+ * }
+ * 
  */
 router.post('/', (req, res, next) => {
     const statement = "INSERT INTO public.journey(journeyname, startdate, enddate, description, destination, defaultcurrencyid)" +
@@ -209,6 +226,23 @@ router.get('/:journeyId', (req, res, next) => {
  * {
  *   message: 'Error Message'
  * }
+ * 
+ * @sample-call
+ * PATCH /journey/1 HTTP/1.1
+ * Host: localhost:3000
+ * Content-Type: application/json
+ * Cache-Control: no-cache
+ * Postman-Token: a1dbe3fe-9534-4bc4-8d27-2207640a841f
+ * 
+ * [
+ * 	{"propName": "journeyname", "value": "change name"},
+ * 	{"propName": "startdate", "value": "2019-01-02"},
+ * 	{"propName": "enddate", "value": "2019-01-06"},
+ * 	{"propName": "description", "value": "change desc"},
+ * 	{"propName": "destination", "value": "chaange dest"},
+ * 	{"propName": "defaultcurrencyid", "value": "1"}				
+ * ]
+ * 
  */
 router.patch('/:journeyId', (req, res, next) => {
     const id = req.params.journeyId;
@@ -256,15 +290,16 @@ router.patch('/:journeyId', (req, res, next) => {
  * @success-code 200
  * @success-content
  * {
- *   message: 'Successfully removed journey',
- *   journey: resultObject
- * }  
+ *     "message": "Successfully removed journey",
+ *     "rowCount": 1
+ * }
  *
  * @error-code 500
  * @error-content
  * {
  *   message: 'Error Message'
  * }
+ * 
  */
 router.delete('/:journeyId', (req, res, next) => {
     const id = req.params.journeyId;
