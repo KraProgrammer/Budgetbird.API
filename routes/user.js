@@ -284,63 +284,76 @@ router.get('/:userId', VerifyToken, (req, res, next) => {
  */
 router.patch('/:userId', VerifyToken, (req, res, next) => {
     const id = req.params.userId;
-    const email = req.body.email;
-    const username = req.body.username;
 
-    const values = [id, email, username];
+    if (req.userId == id) {
+        const email = req.body.email;
+        const username = req.body.username;
 
-    var returnObject = {length: 0};
+        const values = [id, email, username];
 
-    var setUsername = new Promise( (resolve, reject) => {
-        if (username !== undefined) {
-            const statement = 'UPDATE public.vuser SET username=$3 WHERE userid = $1 RETURNING username, userid;';
+        var returnObject = {length: 0};
 
-            db.one(statement, values)
-            .then((result) => {
-                returnObject.length += 1;
-                returnObject.vmessage = 'Successfully updated username';
-                returnObject.vuser = result;    
-                return resolve(returnObject);
-            })
-        } else {
-            return resolve();
-        }
-    });
+        var setUsername = new Promise( (resolve, reject) => {
+            if (username !== undefined) {
+                const statement = 'UPDATE public.vuser SET username=$3 WHERE userid = $1 RETURNING username, userid;';
 
-    var setEmail = new Promise( (resolve, reject) => {
-        if (email !== undefined) {
-            const statement = 'UPDATE public.ruser SET email=$2 WHERE userid = $1 RETURNING email, userid;';
-
-            db.one(statement, values)
-            .then((result) => {
-                returnObject.length += 1;
-                returnObject.rmessage = 'Successfully updated email';
-                returnObject.ruser = result;    
-                return resolve(returnObject);
-            })
-
-        } else {
-            return resolve();
-        }
-    });
-
-
-    Promise.all([setEmail, setUsername])
-    .then(() => {
-        if (returnObject.length != 0) {
-            res.status(200).json(returnObject);
-        } else {
-            res.status(200).json({
-                message: 'Nothing to update'
-            });
-        }
-    })
-    .catch(err => {
-        console.log(err);
-        res.status(500).json({
-            error: err.message
+                db.one(statement, values)
+                .then((result) => {
+                    returnObject.length += 1;
+                    returnObject.vmessage = 'Successfully updated username';
+                    returnObject.vuser = result;    
+                    return resolve(returnObject);
+                })
+                .catch(err => {
+                    return reject(err);
+                });
+            } else {
+                return resolve();
+            }
         });
-    });
+
+        var setEmail = new Promise( (resolve, reject) => {
+            if (email !== undefined) {
+                const statement = 'UPDATE public.ruser SET email=$2 WHERE userid = $1 RETURNING email, userid;';
+
+                db.one(statement, values)
+                .then((result) => {
+                    returnObject.length += 1;
+                    returnObject.rmessage = 'Successfully updated email';
+                    returnObject.ruser = result;    
+                    return resolve(returnObject);
+                })
+                .catch(err => {
+                    return reject(err);
+                });
+
+            } else {
+                return resolve();
+            }
+        });
+
+
+        Promise.all([setEmail, setUsername])
+        .then(() => {
+            if (returnObject.length != 0) {
+                res.status(200).json(returnObject);
+            } else {
+                res.status(200).json({
+                    message: 'Nothing to update'
+                });
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err.message
+            });
+        });
+    } else {
+        res.status(401).json({
+            error: 'Invalid token provided'
+        });
+    }
 });
 
 
@@ -367,28 +380,34 @@ router.patch('/:userId', VerifyToken, (req, res, next) => {
  * }
  * 
  */
-router.delete('/:userId', (req, res, next) => {
+router.delete('/:userId', VerifyToken, (req, res, next) => {
     const id = req.params.userId;
-    const statement = 'DELETE FROM public.ruser WHERE userId = $1;';
-    const statement2 = 'DELETE FROM public.vuser WHERE userId = $1;';
-    const values = [id];
+    if (req.userId == id) {
+        const statement = 'DELETE FROM public.ruser WHERE userId = $1;';
+        const statement2 = 'DELETE FROM public.vuser WHERE userId = $1;';
+        const values = [id];
 
-    db.result(statement, values)
-    .then((result) => {
-        db.result(statement2,values)
-        .then(result => {
-            res.status(200).json({
-                message: 'Successfully removed user',
-                rowCount: result.rowCount        
+        db.result(statement, values)
+        .then((result) => {
+            db.result(statement2,values)
+            .then(result => {
+                res.status(200).json({
+                    message: 'Successfully removed user',
+                    rowCount: result.rowCount        
+                })
             })
         })
-    })
-    .catch(err => {
-        console.log(err);
-        res.status(500).json({
-            error: err.message
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err.message
+            });
         });
-    });
+    } else {
+        res.status(401).json({
+            error: 'Invalid token provided'
+        });
+    }
 });
 
 
