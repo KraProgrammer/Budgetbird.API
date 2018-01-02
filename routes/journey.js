@@ -262,8 +262,6 @@ router.patch('/:journeyId', (req, res, next) => {
                        ' WHERE journeyid = $1' +
                        " RETURNING journeyid, journeyname, startdate, enddate,  description, destination, defaultcurrencyid;";
 
-    console.log(statement);
-    console.log(values);
     db.one(statement, values)
     .then((result) => {res.status(200).json({
             message: 'Successfully updated journey details',
