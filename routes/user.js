@@ -79,9 +79,19 @@ router.post('/signup', (req, res, next) => {
 
                         db.any(rUser, values)
                         .then(result => {
-                            console.log(result);
+                            const token = jwt.sign(
+                                {
+                                    email: req.body.email,
+                                    userId: result.userid
+                                }, 
+                                process.env.JWT_KEY, 
+                                {
+                                    expiresIn: "1h"
+                                }
+                            );
                             res.status(201).json({
-                                message: 'User created'
+                                message: 'User created',
+                                token: token
                             });
                         })
                         .catch(err => {
@@ -332,7 +342,7 @@ router.patch('/:userId', (req, res, next) => {
  * @success-code 200
  * @success-content
  * {
- *     "message": "Successfully removed journey",
+ *     "message": "Successfully removed user",
  *     "rowCount": 1
  * }
  *
