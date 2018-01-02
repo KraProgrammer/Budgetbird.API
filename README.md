@@ -384,6 +384,8 @@ message: 'Error Message'
   
     `email`
   
+    `username`
+  
     `password`
   
 
@@ -408,6 +410,28 @@ message: 'Error Message'
     * **Code:** 409<br>**Content:**
       `{
 message: 'Mail exists'
+},{
+message: 'Missing argument'
+},{
+message: 'Error Message'
+}`
+  
+    * **Code:** 422<br>**Content:**
+      `{
+message: 'Mail exists'
+},{
+message: 'Missing argument'
+},{
+message: 'Error Message'
+}`
+  
+    * **Code:** 500<br>**Content:**
+      `{
+message: 'Mail exists'
+},{
+message: 'Missing argument'
+},{
+message: 'Error Message'
 }`
   
 
@@ -454,7 +478,7 @@ message: 'Mail exists'
 - **Success Response:**
 
   
-    - **Code:** 201<br>**Content:**
+    - **Code:** 200<br>**Content:**
       ```
         {
             token, message: 'Auth successful'
@@ -470,6 +494,179 @@ message: 'Mail exists'
     * **Code:** 401<br>**Content:**
       `{
 message: 'Auth failed'
+}`
+  
+
+
+
+<br>
+
+
+## User Details Route ##
+
+
+  #### Used to retrieve users details ####
+
+
+
+* **URL**
+
+  
+    `/user/:userId`
+  
+
+
+
+* **Method:**
+
+  
+    `GET`
+  
+
+
+
+
+
+
+
+- **Success Response:**
+
+  
+    - **Code:** 200<br>**Content:**
+      ```
+        {
+            message: 'Successfully retrieved user details',
+            user: resultObject
+        }
+      ```
+  
+
+
+
+- **Error Response:**
+
+  
+    * **Code:** 500<br>**Content:**
+      `{
+message: err.message
+}`
+  
+
+
+
+<br>
+
+
+## PATCH user Details Route ##
+
+
+  #### Used to update all details to given user ####
+
+
+
+* **URL**
+
+  
+    `/user/:userId`
+  
+
+
+
+* **Method:**
+
+  
+    `PATCH`
+  
+
+
+
+
+
+- **Data Params**
+
+  
+    `email`
+  
+    `username`
+  
+
+
+
+- **Success Response:**
+
+  
+    - **Code:** 200<br>**Content:**
+      ```
+        {
+            message: 'Successfully retrieved user details',
+            user: resultObject
+        }
+      ```
+  
+
+
+
+- **Error Response:**
+
+  
+    * **Code:** 500<br>**Content:**
+      `{
+message: err.message
+}`
+  
+
+
+
+<br>
+
+
+## Delete User Details Route ##
+
+
+  #### Used to delete a given User ####
+
+
+
+* **URL**
+
+  
+    `/user/:userId`
+  
+
+
+
+* **Method:**
+
+  
+    `DELETE`
+  
+
+
+
+
+
+
+
+- **Success Response:**
+
+  
+    - **Code:** 200<br>**Content:**
+      ```
+        {
+            "message": "Successfully removed journey",
+            "rowCount": 1
+        }
+      ```
+  
+
+
+
+- **Error Response:**
+
+  
+    * **Code:** 500<br>**Content:**
+      `{
+message: 'Error Message'
 }`
   
 
