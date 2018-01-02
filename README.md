@@ -26,6 +26,12 @@
 
 
 
+- **Data Params**
+
+  
+    `(Header) Bearer token`
+  
+
 
 
 - **Success Response:**
@@ -106,6 +112,8 @@ message: 'Error Message'
   
     `currency`
   
+    `(Header) Bearer token`
+  
 
 
 
@@ -184,6 +192,12 @@ message: 'Error Message'
 
 
 
+- **Data Params**
+
+  
+    `(Header) Bearer token`
+  
+
 
 
 - **Success Response:**
@@ -193,6 +207,132 @@ message: 'Error Message'
       ```
         {
             message: 'Successfully retrieved journey details',
+            journey: resultObject
+        }
+      ```
+  
+
+
+
+- **Error Response:**
+
+  
+    * **Code:** 500<br>**Content:**
+      `{
+message: 'Error Message'
+}`
+  
+
+
+
+<br>
+
+
+## Add User to Journey ##
+
+
+  #### Used to add a user to a Journey ####
+
+
+
+* **URL**
+
+  
+    `/journey/:journeyId/user`
+  
+
+
+
+* **Method:**
+
+  
+    `POST`
+  
+
+
+
+
+
+- **Data Params**
+
+  
+    `(Header) Bearer token`
+  
+    `userid`
+  
+
+
+
+- **Success Response:**
+
+  
+    - **Code:** 200<br>**Content:**
+      ```
+        {
+            message: 'Successfully added user to journey',
+            journey: resultObject
+        }
+      ```
+  
+
+
+
+- **Error Response:**
+
+  
+    * **Code:** 500<br>**Content:**
+      `{
+message: 'Error Message'
+}`
+  
+
+
+
+<br>
+
+
+## Remove user from journey ##
+
+
+  #### Used to remove a user from a Journey ####
+
+
+
+* **URL**
+
+  
+    `/journey/:journeyId/user`
+  
+
+
+
+* **Method:**
+
+  
+    `DELETE`
+  
+
+
+
+
+
+- **Data Params**
+
+  
+    `(Header) Bearer token`
+  
+    `userid`
+  
+
+
+
+- **Success Response:**
+
+  
+    - **Code:** 200<br>**Content:**
+      ```
+        {
+            message: 'Successfully remove user from journey',
             journey: resultObject
         }
       ```
@@ -238,6 +378,12 @@ message: 'Error Message'
 
 
 
+
+- **Data Params**
+
+  
+    `(Header) Bearer token`
+  
 
 
 
@@ -323,6 +469,12 @@ message: 'Error Message'
 
 
 
+
+- **Data Params**
+
+  
+    `(Header) Bearer token`
+  
 
 
 
@@ -527,6 +679,12 @@ message: 'Auth failed'
 
 
 
+- **Data Params**
+
+  
+    `(Header) Bearer token`
+  
+
 
 
 - **Success Response:**
@@ -598,6 +756,8 @@ message: No token provided.
   
     `username`
   
+    `(Header) Bearer token`
+  
 
 
 
@@ -653,6 +813,12 @@ message: err.message
 
 
 
+
+- **Data Params**
+
+  
+    `(Header) Bearer token`
+  
 
 
 

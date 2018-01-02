@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const promise = require('bluebird');
 
-const VerifyToken = require('../VerifyToken');
+const verifyToken = require('../modules/verifyToken');
 
 const db = require('../db')
 
@@ -208,6 +208,7 @@ router.post('/login', (req, res, next) => {
  * @method GET
  *
  * @url /user/:userId
+ * @data (Header) Bearer token
  *
  * @success-code 200
  * @success-content
@@ -228,9 +229,9 @@ router.post('/login', (req, res, next) => {
  * }
  */
 
-router.get('/:userId', VerifyToken, (req, res, next) => {
+router.get('/:userId', verifyToken, (req, res, next) => {
     const id = req.params.userId;
-    if (req.userId == id) {
+    if (req.userData.userId == id) {
 
         const statement = 'SELECT userid, email, creationdate, username' + 
                         ' FROM public.alluser WHERE userid = $1;';
@@ -265,7 +266,7 @@ router.get('/:userId', VerifyToken, (req, res, next) => {
  * @url /user/:userId
  * @data email
  * @data username
- * 
+ * @data (Header) Bearer token
  * 
  * @success-code 200
  * @success-content
@@ -282,10 +283,10 @@ router.get('/:userId', VerifyToken, (req, res, next) => {
  * 
  * 
  */
-router.patch('/:userId', VerifyToken, (req, res, next) => {
+router.patch('/:userId', verifyToken, (req, res, next) => {
     const id = req.params.userId;
 
-    if (req.userId == id) {
+    if (req.userData.userId == id) {
         const email = req.body.email;
         const username = req.body.username;
 
@@ -365,6 +366,7 @@ router.patch('/:userId', VerifyToken, (req, res, next) => {
  * @method DELETE
  *
  * @url /user/:userId
+ * @data (Header) Bearer token
  *
  * @success-code 200
  * @success-content
@@ -380,9 +382,9 @@ router.patch('/:userId', VerifyToken, (req, res, next) => {
  * }
  * 
  */
-router.delete('/:userId', VerifyToken, (req, res, next) => {
+router.delete('/:userId', verifyToken, (req, res, next) => {
     const id = req.params.userId;
-    if (req.userId == id) {
+    if (req.userData.userId == id) {
         const statement = 'DELETE FROM public.ruser WHERE userId = $1;';
         const statement2 = 'DELETE FROM public.vuser WHERE userId = $1;';
         const values = [id];

@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const userRoutes = require('./transaction');
 const db = require('../db');
-const helper = require('../helper');
+
+const helper = require('../modules/helper');
+const verifyToken = require('../modules/verifyToken');
 
 router.use('/:journeyId/transaction', userRoutes);
 
@@ -15,6 +17,7 @@ router.use('/:journeyId/transaction', userRoutes);
  * @method GET
  *
  * @url /journey
+ * @data (Header) Bearer token
  *
  * @success-code 200
  * @success-content
@@ -40,9 +43,9 @@ router.use('/:journeyId/transaction', userRoutes);
  *   message: 'Error Message'
  * }
  */
-router.get('/', (req, res, next) => {
-    const statement = 'SELECT journeyid, journeyname, startdate, enddate, description, destination, defaultcurrencyid FROM public.journey;';
-    const values = [];
+router.get('/', verifyToken, (req, res, next) => {
+    const statement = 'SELECT journeyid, journeyname, startdate, enddate, description, destination, defaultcurrencyid FROM public.journey JOIN userinjourney USING(journeyid) WHERE userid=$1;';
+    const values = [req.userData.userId];
 
     db.any(statement, values)
         .then(dataArray => {
@@ -50,7 +53,7 @@ router.get('/', (req, res, next) => {
                 count: dataArray.length, 
                 journeys: dataArray.map(dataItem => {
                     return {
-                        name: dataItem.name,
+                        name: dataItem.journeyname,
                         startdate: dataItem.startdate,
                         enddate: dataItem.enddate,
                         description: dataItem.description,
@@ -58,7 +61,6 @@ router.get('/', (req, res, next) => {
                         currency: dataItem.defaultcurrencyid,
                         request: {
                             type: 'GET',
-                            url: 'http://.../journey/' + dataItem.journeyid,
                             url: req.protocol + '://' + req.get('host') + req.originalUrl + '/' + dataItem.journeyid
                         }
                     }
@@ -88,6 +90,7 @@ router.get('/', (req, res, next) => {
  * @data description
  * @data destination
  * @data currency
+ * @data (Header) Bearer token
  * 
  * @success-code 201
  * @success-content
@@ -122,7 +125,7 @@ router.get('/', (req, res, next) => {
  * }
  * 
  */
-router.post('/', (req, res, next) => {
+router.post('/', verifyToken, (req, res, next) => {
     const statement = "INSERT INTO public.journey(journeyname, startdate, enddate, description, destination, defaultcurrencyid)" +
     " VALUES  ($1, to_date($2, 'YYYY-MM-DD') , to_date($3, 'YYYY-MM-DD'), $4, $5, $6)" +
     " RETURNING journeyid, journeyname, startdate, enddate,  description, destination, defaultcurrencyid;";
@@ -136,14 +139,27 @@ router.post('/', (req, res, next) => {
     }
 
     db.one(statement, values)
-    .then((result) => {res.status(201).json({
-            message: 'Successfully created journey',
-            createdJourney: result,
-            request: {
-                type: 'GET', 
-                url: req.protocol + '://' + req.get('host') + req.originalUrl + '/' + result.journeyid
-            }            
+    .then((result) => {
+        const statement = "INSERT INTO public.userinjourney(userid, journeyid, isadmin) VALUES ($1, $2, $3);"
+        const values = [req.userData.userId, result.journeyid, true]
+
+        db.none(statement, values)
+        .then(() => {
+            res.status(201).json({
+                message: 'Successfully created journey',
+                createdJourney: result,
+                request: {
+                    type: 'GET', 
+                    url: req.protocol + '://' + req.get('host') + req.originalUrl + '/' + result.journeyid
+                }            
+            })
         })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err.message
+            });
+        });
     })
     .catch(err => {
         console.log(err);
@@ -153,6 +169,10 @@ router.post('/', (req, res, next) => {
     });
 });
 
+
+
+
+
 /**
  * @title Get Journey Details Route
  *
@@ -161,6 +181,7 @@ router.post('/', (req, res, next) => {
  * @method GET
  *
  * @url /journey/:journeyId
+ * @data (Header) Bearer token
  *
  * @success-code 200
  * @success-content
@@ -175,17 +196,32 @@ router.post('/', (req, res, next) => {
  *   message: 'Error Message'
  * }
  */
-router.get('/:journeyId', (req, res, next) => {
+router.get('/:journeyId', verifyToken, (req, res, next) => {
     const id = req.params.journeyId;
     const statement = 'SELECT journeyid, journeyname, startdate, enddate, description, destination, defaultcurrencyid' + 
-                       ' FROM public.journey WHERE journeyid = $1;';
-    const values = [id];
+                       ' FROM public.journey JOIN userinjourney USING(journeyid) WHERE journeyid = $1 AND userid=$2;';
+
+    const values = [id, req.userData.userId];
 
     db.one(statement, values)
-    .then((result) => {res.status(200).json({
-            message: 'Successfully retrieved journey details',
-            journey: result        
+    .then((result) => {
+        const statement = "SELECT userid, username, email FROM public.userinjourney JOIN public.alluser USING(userid) WHERE journeyid = $1;"
+        const values = [result.journeyid]
+
+        db.any(statement, values)
+        .then((users) => {
+            result.users = users;
+            res.status(200).json({
+                message: 'Successfully retrieved journey details',
+                journey: result        
+            })
         })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err.message
+            });
+        });
     })
     .catch(err => {
         console.log(err);
@@ -197,6 +233,78 @@ router.get('/:journeyId', (req, res, next) => {
 });
 
 /**
+ * @title Add User to Journey
+ *
+ * @desc Used to add a user to a Journey
+ *
+ * @method POST
+ *
+ * @url /journey/:journeyId/user
+ * @data (Header) Bearer token
+ * @data userid
+ *
+ * @success-code 200
+ * @success-content
+ * {
+ *   message: 'Successfully added user to journey',
+ *   journey: resultObject
+ * }  
+ *
+ * @error-code 500
+ * @error-content
+ * {
+ *   message: 'Error Message'
+ * }
+ */
+router.post('/:journeyId/user', verifyToken, (req, res, next) => {
+    // check if journey exitst
+    // check if journey rights
+    // check if user exits
+    // add user to journey
+
+    res.status(200).json({
+        message: 'Not implemented jet'     
+    });
+
+});
+
+/**
+ * @title Remove user from journey
+ *
+ * @desc Used to remove a user from a Journey
+ *
+ * @method DELETE
+ *
+ * @url /journey/:journeyId/user
+ * @data (Header) Bearer token
+ * @data userid
+ *
+ * @success-code 200
+ * @success-content
+ * {
+ *   message: 'Successfully remove user from journey',
+ *   journey: resultObject
+ * }  
+ *
+ * @error-code 500
+ * @error-content
+ * {
+ *   message: 'Error Message'
+ * }
+ */
+router.DELETE('/:journeyId/user', verifyToken, (req, res, next) => {
+    // check if journey exitst
+    // check if journey rights
+    // check if user exits
+    // add user to journey
+    res.status(200).json({
+        message: 'Not implemented jet'     
+    });
+
+});
+
+
+/**
  * @title PATCH Journey Details Route
  *
  * @desc Used to update all details to given journey
@@ -204,6 +312,7 @@ router.get('/:journeyId', (req, res, next) => {
  * @method PATCH
  *
  * @url /journey/:journeyId
+ * @data (Header) Bearer token
  *
  * @success-code 200
  * @success-content
@@ -235,7 +344,7 @@ router.get('/:journeyId', (req, res, next) => {
  * ]
  * 
  */
-router.patch('/:journeyId', (req, res, next) => {
+router.patch('/:journeyId', verifyToken, (req, res, next) => {
     const id = req.params.journeyId;
     var values = [id];
     var updateOpsStr = " ";
@@ -275,6 +384,7 @@ router.patch('/:journeyId', (req, res, next) => {
  * @method DELETE
  *
  * @url /journey/:journeyId
+ * @data (Header) Bearer token
  *
  * @success-code 200
  * @success-content
@@ -290,10 +400,10 @@ router.patch('/:journeyId', (req, res, next) => {
  * }
  * 
  */
-router.delete('/:journeyId', (req, res, next) => {
+router.delete('/:journeyId', verifyToken, (req, res, next) => {
     const id = req.params.journeyId;
-    const statement = 'DELETE FROM public.journey WHERE journeyid = $1;';
-    const values = [id];
+    const statement = 'DELETE FROM public.journey WHERE journeyID IN (SELECT journeyid FROM public.journey JOIN public.userInJOurney USING (journeyID) WHERE journeyID = $1 AND userid = $2);'; // on delete cascade
+    const values = [id, req.userData.userId];
 
     db.result(statement, values)
     .then((result) => {res.status(200).json({
