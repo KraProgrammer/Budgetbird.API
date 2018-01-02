@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const promise = require('bluebird');
 
+const VerifyToken = require('../VerifyToken');
+
 const db = require('../db')
 
 
@@ -82,7 +84,7 @@ router.post('/signup', (req, res, next) => {
                             const token = jwt.sign(
                                 {
                                     email: req.body.email,
-                                    userId: result.userid
+                                    userId: values[2]
                                 }, 
                                 process.env.JWT_KEY, 
                                 {
@@ -219,26 +221,38 @@ router.post('/login', (req, res, next) => {
  * {
  *   message: err.message
  * }
+ * @error-code 401
+ * @error-content
+ * {
+ *   message: No token provided.
+ * }
  */
-router.get('/:userId', (req, res, next) => {
+
+router.get('/:userId', VerifyToken, (req, res, next) => {
     const id = req.params.userId;
-    const statement = 'SELECT userid, email, creationdate, username' + 
-                       ' FROM public.alluser WHERE userid = $1;';
-    const values = [id];
+    if (req.userId == id) {
 
-    db.one(statement, values)
-    .then((result) => {res.status(200).json({
-            message: 'Successfully retrieved user details',
-            user: result        
+        const statement = 'SELECT userid, email, creationdate, username' + 
+                        ' FROM public.alluser WHERE userid = $1;';
+        const values = [id];
+
+        db.one(statement, values)
+        .then((result) => {res.status(200).json({
+                message: 'Successfully retrieved user details',
+                user: result        
+            })
         })
-    })
-    .catch(err => {
-        console.log(err);
-        res.status(500).json({
-            error: err.message
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err.message
+            });
         });
-    });
-
+    } else {
+        res.status(401).json({
+            error: 'Invalid token provided'
+        });
+    }
 });
 
 /**
@@ -268,7 +282,7 @@ router.get('/:userId', (req, res, next) => {
  * 
  * 
  */
-router.patch('/:userId', (req, res, next) => {
+router.patch('/:userId', VerifyToken, (req, res, next) => {
     const id = req.params.userId;
     const email = req.body.email;
     const username = req.body.username;

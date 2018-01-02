@@ -2,19 +2,10 @@ const express = require('express');
 const router = express.Router();
 const userRoutes = require('./transaction');
 const db = require('../db');
+const helper = require('../helper');
 
 router.use('/:journeyId/transaction', userRoutes);
-function escapeHtml(text) {
-    var map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
 
-    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-}
 
 /**
  * @title Get Journeys Route
@@ -258,7 +249,7 @@ router.patch('/:journeyId', (req, res, next) => {
     }
 
     const statement = 'UPDATE public.journey SET' +
-                        escapeHtml(updateOpsStr) + 
+                        helper.escapeHtml(updateOpsStr) + 
                        ' WHERE journeyid = $1' +
                        " RETURNING journeyid, journeyname, startdate, enddate,  description, destination, defaultcurrencyid;";
 

@@ -549,6 +549,15 @@ message: 'Auth failed'
     * **Code:** 500<br>**Content:**
       `{
 message: err.message
+},{
+message: No token provided.
+}`
+  
+    * **Code:** 401<br>**Content:**
+      `{
+message: err.message
+},{
+message: No token provided.
 }`
   
 
@@ -653,7 +662,7 @@ message: err.message
     - **Code:** 200<br>**Content:**
       ```
         {
-            "message": "Successfully removed journey",
+            "message": "Successfully removed user",
             "rowCount": 1
         }
       ```
