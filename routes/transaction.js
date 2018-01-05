@@ -1,40 +1,15 @@
 const express = require('express');
 const router = express.Router();
 
-router.get('/', (req, res, next) => {
-    res.status(200);
-    res.json({
-        message: 'Success Endpoint test'
-    })
-});
+const verifyToken = require('../modules/verifyToken');
+const transactionController = require('../controllers/transaction');
 
-router.post('/', (req, res, next) => {
-    res.status(200);
-    res.json({
-        message: 'Success Endpoint test'
-    })
-});
+/* endpoints */
+router.get('/', verifyToken, transactionController.transactionGetAll);
+router.post('/', verifyToken, transactionController.transactionCreate);
 
-
-router.get('/:transactionId', (req, res, next) => {
-    res.status(200);
-    res.json({
-        message: 'Success Endpoint test'
-    })
-});
-
-router.patch('/:transactionId', (req, res, next) => {
-    res.status(200);
-    res.json({
-        message: 'Success Endpoint test'
-    })
-});
-
-router.delete('/:transactionId', (req, res, next) => {
-    res.status(200);
-    res.json({
-        message: 'Success Endpoint test'
-    })
-});
+router.get('/:transactionId', verifyToken, transactionController.transactionGetDetail);
+router.patch('/:transactionId', verifyToken, transactionController.transactionPatch);
+router.delete('/:transactionId', verifyToken, transactionController.transactionDelete);
 
 module.exports = router;
