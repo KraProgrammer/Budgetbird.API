@@ -292,7 +292,7 @@ router.post('/:journeyId/user', verifyToken, (req, res, next) => {
  *   message: 'Error Message'
  * }
  */
-router.DELETE('/:journeyId/user', verifyToken, (req, res, next) => {
+router.delete('/:journeyId/user', verifyToken, (req, res, next) => {
     // check if journey exitst
     // check if journey rights
     // check if user exits
