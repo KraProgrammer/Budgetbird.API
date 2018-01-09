@@ -3,11 +3,12 @@ const router = express.Router();
 const userRoutes = require('./transaction');
 
 const verifyToken = require('../modules/verifyToken');
+const helper = require('../modules/helper');
 const journeyController = require('../controllers/journey');
 
-router.use('/:journeyId/transaction', userRoutes);
+router.use('/:journeyId/transaction', helper.saveJourney, userRoutes);
 
-
+ 
 /* endpoints */
 router.get('/', verifyToken, journeyController.journeyGetAll);
 router.post('/', verifyToken, journeyController.journeyCreate);

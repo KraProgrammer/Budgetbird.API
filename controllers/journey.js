@@ -1,7 +1,8 @@
 const db = require('../db');
 const helper = require('../modules/helper');
 
-
+const journeySelectAdmin = "SELECT journeyid FROM public.journey JOIN public.userInJOurney USING (journeyID) WHERE journeyID = $1 AND userid = $2 AND isAdmin = true";
+const journeySelect = "SELECT journeyid FROM public.journey JOIN public.userInJOurney USING (journeyID) WHERE journeyID = $1 AND userid = $2";
 
 /**
  * @title Get Journeys Route
@@ -190,7 +191,7 @@ exports.journeyGetDetails = (req, res, next) => {
     // maybe union statements for better performance later
     const id = req.params.journeyId;
     const statement = 'SELECT journeyid, journeyname, startdate, enddate, description, destination, defaultcurrencyid' + 
-                       ' FROM public.journey JOIN userinjourney USING(journeyid) WHERE journeyid = $1 AND userid=$2;';
+                       ' FROM public.journey JOIN userinjourney USING(journeyid) WHERE journeyid = $1 AND userid=$2;'; // no admin needed
 
     const values = [id, req.userData.userId];
 
@@ -248,13 +249,40 @@ exports.journeyGetDetails = (req, res, next) => {
  * }
  */
 exports.journeyAddUser = (req, res, next) => {
-    // check if journey exitst
-    // check if journey rights
-    // check if user exits
-    // add user to journey
+    const id = req.params.journeyId;
+    const travelerId  = req.body.userid;
 
-    res.status(200).json({
-        message: 'Not implemented jet'     
+    const statement = journeySelectAdmin + ';'
+    const values = [id, req.userData.userId, travelerId];
+
+
+    db.one(statement, values)
+    .then((result) => {
+        const statement = 'INSERT INTO public.userinjourney(' +
+        'userid, journeyid, isadmin)' +
+        'VALUES ($3, $1, false) RETURNING journeyId, userid;'
+
+
+        db.one(statement, values)
+        .then((users) => {
+            result.users = users;
+            res.status(200).json({
+                message: 'Successfully added user to journey',
+                users: result        
+            })
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err.message
+            });
+        });
+    })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({
+            error: err.message
+        });
     });
 
 }
@@ -284,15 +312,32 @@ exports.journeyAddUser = (req, res, next) => {
  * }
  */
 exports.journeyRemoveUser = (req, res, next) => {
-    // check if journey exitst
-    // check if journey rights
-    // check if user exits
-    // add user to journey
-    res.status(200).json({
-        message: 'Not implemented jet'     
+    const id = req.params.journeyId;
+    const travelerId  = req.body.userid;
+
+    var select = "";
+    const values = [id, req.userData.userId, travelerId];
+
+    if (travelerId == values[1]) {
+        // user want to leave journey
+        select = journeySelect;
+    } else {
+        select = journeySelectAdmin;
+    }
+    const statement = 'DELETE FROM public.userinJourney WHERE journeyID IN (' + select + ') AND userid = $3 RETURNING journeyID;';
+
+    db.one(statement, values)
+    .then((result) => {
+        res.status(200).json({
+            message: 'Successfully removed user from journey'
+        })
+    })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({
+            error: err.message
+        });
     });
-     
-    // entweder selber oder admin
 
 }
 
@@ -339,11 +384,11 @@ exports.journeyRemoveUser = (req, res, next) => {
 
 exports.journeyPatch = (req, res, next) => {
     const id = req.params.journeyId;
-    var values = [id];
+    var values = [id, req.userData.userId];
     var updateOpsStr = " ";
-    var i = 2;
+    var i = 3;
     for (const ops of req.body) {
-        if (i != 2) {
+        if (i != 3) {
             updateOpsStr += ", ";
         }
         updateOpsStr += " " + ops.propName + "=$" + i++;
@@ -352,7 +397,7 @@ exports.journeyPatch = (req, res, next) => {
 
     const statement = 'UPDATE public.journey SET' +
                         helper.escapeHtml(updateOpsStr) + 
-                       ' WHERE journeyid = $1' +
+                       ' WHERE journeyid IN (' + journeySelectAdmin + ')' +
                        " RETURNING journeyid, journeyname, startdate, enddate,  description, destination, defaultcurrencyid;";
 
     db.one(statement, values)
@@ -395,10 +440,10 @@ exports.journeyPatch = (req, res, next) => {
  */
 exports.journeyDelete = (req, res, next) => {
     const id = req.params.journeyId;
-    const statement = 'DELETE FROM public.journey WHERE journeyID IN (SELECT journeyid FROM public.journey JOIN public.userInJOurney USING (journeyID) WHERE journeyID = $1 AND userid = $2);'; // on delete cascade
+    const statement = 'DELETE FROM public.journey WHERE journeyID IN (' + journeySelectAdmin + ') RETURNING journeyID;'; // on delete cascade
     const values = [id, req.userData.userId];
 
-    db.result(statement, values)
+    db.one(statement, values)
     .then((result) => {res.status(200).json({
             message: 'Successfully removed journey',
             rowCount: result.rowCount        
