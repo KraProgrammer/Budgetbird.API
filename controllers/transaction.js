@@ -159,9 +159,9 @@ exports.transactionCreate = (req, res, next) => {
                                 "VALUES ($1, $2, $3, $4);"
 
         var valuesForInsert = []; /////////////////////////// create multiple insert 
-        foreach (entry in partition) { ////// foreach wrong?
-            valuesForInsert.push([req.journeyData.id, result.transactionid, entry.userid, entry.amout]);
-        }
+        // foreach (entry in partition) { ////// foreach wrong?
+        //     valuesForInsert.push([req.journeyData.id, result.transactionid, entry.userid, entry.amout]);
+        // }
 
         db.none(statement, values)
         .then(() => {
