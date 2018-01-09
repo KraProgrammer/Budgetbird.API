@@ -34,7 +34,6 @@ const journeySelect = "SELECT journeyid FROM public.journey JOIN public.userInJO
  * 
  */
 exports.transactionGetAll = (req, res, next) => {
-    console.log(req.userData);
    
     const statement = "SELECT transactionid, journeyid, timestamp, description, currencyid, categoryid, array_agg(" + '\'{"userid": \' || userId || \', "amount": \' || amount::money::numeric::float8 || \'}\''+ ") AS data " +
 	"FROM public.transaction " +
@@ -42,17 +41,18 @@ exports.transactionGetAll = (req, res, next) => {
     "WHERE journeyid IN ( "+ journeySelect + " ) " +
     "GROUP BY transactionid, journeyId; ";
 
-    console.log(statement);
-
     const values = [req.journeyData.id, req.userData.userId];
 
     db.any(statement, values)
     .then((dataArray) => {
+        var sum = 0; // maybe slow check latter
+        var tsum = 0;
         const response = {
             count: dataArray.length, 
             transactions: dataArray.map(transaction => {
+                tsum = 0;
                 // return transaction;
-                return {
+                var returnObj = {
                     transactionID: transaction.transactionid, 
                     journeyId: transaction.journeyid,
                     timestamp: transaction.timestamp, 
@@ -60,19 +60,16 @@ exports.transactionGetAll = (req, res, next) => {
                     categoryId: transaction.categoryid, 
                     description: transaction.description,
                     data: transaction.data.map(entry => {
-                        var newE = entry.replace("\\", "");
-                        return newE;
-                    })
-                    // data: JSON.stringify(transaction.data.map(entry => {
-                    //     var newE = entry.replace("/", "");
-                    //     console.log(newE );
-                    //      return newE;
-                    // }))
-                    // data: data.map(entry => {
-                    //     return {entry}
-                    // })
+                        entryJSON = JSON.parse(entry);
+                        tsum += entryJSON.amount;
+                        return entryJSON;
+                    }),
+                    tsum: tsum
                 }
-            })
+                sum += tsum;
+                return returnObj;
+            }),
+            sum: sum
         }
         res.status(200).json(response);
     })
@@ -83,33 +80,6 @@ exports.transactionGetAll = (req, res, next) => {
         });
     });
 
-    // db.any(statement, values)
-    // .then((transactions) => {
-    //     const statement = "SELECT userId, amount FROM public.userInTransaction WHERE journeyid = $1, transactionid = $2"
-    //     var response = {
-    //         count: transactions.length, 
-    //         transactions: transactions.map(tranaction => {
-    //             const values = [tranaction.journeyId, transaction.transactionID];
-                
-    //             return {
-    //                 transactionID: transaction.transactionID, 
-    //                 timestamp: transaction.timestamp, 
-    //                 currencyId: transaction.currencyId, 
-    //                 categoryId: transaction.categoryId, 
-    //                 description: transaction.description,
-    //                 data: {
-
-    //                 }
-    //             }
-    //         })
-    //     }
-    // })
-    // .catch(err => {
-    //     console.log(err);
-    //     res.status(500).json({
-    //         error: err.message
-    //     });
-    // });
 }
 
 exports.transactionCreate = (req, res, next) => {
@@ -128,10 +98,41 @@ exports.transactionCreate = (req, res, next) => {
 }
 
 exports.transactionGetDetail = (req, res, next) => {
-    res.status(200);
-    res.json({
-        message: 'Success Endpoint test'
+    const transactionId = req.params.transactionId;
+    const statement = "SELECT transactionid, journeyid, timestamp, description, currencyid, categoryid, array_agg(" + '\'{"userid": \' || userId || \', "amount": \' || amount::money::numeric::float8 || \'}\''+ ") AS data " +
+	"FROM public.transaction " +
+    "JOIN public.userInTransaction USING (journeyid, transactionid) " +
+    "WHERE journeyid IN ( "+ journeySelect + " ) AND transactionid = $3" +
+    "GROUP BY transactionid, journeyId; ";
+
+    const values = [req.journeyData.id, req.userData.userId, transactionId];
+
+    db.one(statement, values)
+    .then((transaction) => {
+        
+        var tsum = 0;
+        var returnObj = {
+            transactionID: transaction.transactionid, 
+            journeyId: transaction.journeyid,
+            timestamp: transaction.timestamp, 
+            currencyId: transaction.currencyid, 
+            categoryId: transaction.categoryid, 
+            description: transaction.description,
+            data: transaction.data.map(entry => {
+                entryJSON = JSON.parse(entry);
+                tsum += entryJSON.amount;
+                return entryJSON;
+            }),
+            tsum: tsum
+        }
+        res.status(200).json(returnObj);
     })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({
+            error: err.message
+        });
+    });
 }
 
 exports.transactionPatch = (req, res, next) => {
