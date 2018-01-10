@@ -59,6 +59,11 @@ exports.transactionGetAll = (req, res, next) => {
                        "WHERE journeyid IN ( "+ journeySelect + " ) " +
                     "GROUP BY transactionid, journeyId; ";
 
+    // change that if no user in transaction the transaction get also returned 
+    const otherStatement = "SELECT transactionid, journeyid, timestamp, description, currencyid, categoryid" +
+                             "FROM public.transaction WHERE journeyid IN ( SELECT journeyid FROM public.journey JOIN public.userInJOurney USING (journeyID) WHERE journeyID = '5' AND userid = 1 ) AND transactionid = '8' GROUP BY transactionid, journeyId;"
+    
+    
     const values = [req.journeyData.id, req.userData.userId];
 
     db.any(statement, values)
@@ -137,12 +142,11 @@ exports.transactionGetAll = (req, res, next) => {
 exports.transactionCreate = (req, res, next) => {
     const statement = "INSERT INTO public.transaction(" +
     'journeyid, "timestamp", description, currencyid, categoryid)' +
-    "VALUES ($1, now(), $3, $4, $5);" +
+    "VALUES ($1, now(), $3, $4, $5) " +
     " RETURNING transactionid, journeyid, timestamp, description, currencyid, categoryid;";
 
     const values = [req.journeyData.id, req.userData.userId, req.body.description, req.body.currencyid, req.body.categoryid];
     const partition = req.body.partition;
-
 
 
     // i am not sure if this is good design
@@ -154,23 +158,32 @@ exports.transactionCreate = (req, res, next) => {
 
     db.one(statement, values)
     .then((result) => {
-        const statement = "INSERT INTO public.userintransaction(" +
-                                "journeyid, transactionid, userid, amount)" +
-                                "VALUES ($1, $2, $3, $4);"
+        var statementPartition = "INSERT INTO public.userintransaction(" +
+                                    "journeyid, transactionid, userid, amount) VALUES";
+                                    
 
-        var valuesForInsert = []; /////////////////////////// create multiple insert 
-        // foreach (entry in partition) { ////// foreach wrong?
-        //     valuesForInsert.push([req.journeyData.id, result.transactionid, entry.userid, entry.amout]);
-        // }
+        var valuesForInsert = [req.journeyData.id, result.transactionid]; 
+        var i = 3; 
+        partition.forEach((element, idx, array) => {
+            if (idx == array.length - 1) {
+                statementPartition += " ($1, $2, $" + i + ", $" + ++i + "); "
+            } else {
+                statementPartition += " ($1, $2, $" + i + ", $" + ++i + "), "
+            }
+            valuesForInsert.push(element.userid, element.amount);
+            i++;
+        });
+        console.log(statementPartition);
+        console.log(valuesForInsert);
 
-        db.none(statement, values)
+        db.any(statement, values)
         .then(() => {
             res.status(201).json({
-                message: 'Successfully created journey',
+                message: 'Successfully created transaction',
                 createdJourney: result,
                 request: {
-                    type: 'GET', 
-                    url: req.protocol + '://' + req.get('host') + req.originalUrl + '/' + result.journeyid
+                    type: 'GET',
+                    url: req.protocol + '://' + req.get('host') + req.originalUrl + '/' + result.transactionid
                 }            
             })
         })
