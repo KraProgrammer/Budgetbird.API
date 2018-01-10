@@ -301,8 +301,7 @@ exports.journeyAddUser = (req, res, next) => {
  * @success-code 200
  * @success-content
  * {
- *   message: 'Successfully remove user from journey',
- *   journey: resultObject
+ *   message: 'Successfully remove user from journey'
  * }  
  *
  * @error-code 500
@@ -349,6 +348,7 @@ exports.journeyRemoveUser = (req, res, next) => {
  * @method PATCH
  *
  * @url /journey/:journeyId
+ * @data Array of properties [{"propname": "...", "value": "..."}])
  * @data (Header) Bearer token
  *
  * @success-code 200

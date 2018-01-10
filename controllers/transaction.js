@@ -1,5 +1,5 @@
 const db = require('../db');
-
+const helper = require('../modules/helper');
 
 const journeySelectAdmin = "SELECT journeyid FROM public.journey JOIN public.userInJOurney USING (journeyID) WHERE journeyID = $1 AND userid = $2 AND isAdmin = true";
 const journeySelect = "SELECT journeyid FROM public.journey JOIN public.userInJOurney USING (journeyID) WHERE journeyID = $1 AND userid = $2";
@@ -55,15 +55,11 @@ exports.transactionGetAll = (req, res, next) => {
    
     const statement = "SELECT transactionid, journeyid, timestamp, description, currencyid, categoryid, array_agg(" + '\'{"userid": \' || userId || \', "amount": \' || amount::money::numeric::float8 || \'}\''+ ") AS data " +
                         "FROM public.transaction " +
-                        "JOIN public.userInTransaction USING (journeyid, transactionid) " +
+                        "LEFT JOIN public.userInTransaction USING (journeyid, transactionid) " +
                        "WHERE journeyid IN ( "+ journeySelect + " ) " +
                     "GROUP BY transactionid, journeyId; ";
 
-    // change that if no user in transaction the transaction get also returned 
-    const otherStatement = "SELECT transactionid, journeyid, timestamp, description, currencyid, categoryid" +
-                             "FROM public.transaction WHERE journeyid IN ( SELECT journeyid FROM public.journey JOIN public.userInJOurney USING (journeyID) WHERE journeyID = '5' AND userid = 1 ) AND transactionid = '8' GROUP BY transactionid, journeyId;"
-    
-    
+
     const values = [req.journeyData.id, req.userData.userId];
 
     db.any(statement, values)
@@ -84,8 +80,12 @@ exports.transactionGetAll = (req, res, next) => {
                     description: transaction.description,
                     data: transaction.data.map(entry => {
                         entryJSON = JSON.parse(entry);
-                        tsum += entryJSON.amount;
-                        return entryJSON;
+                        if (entryJSON) {
+                            tsum += entryJSON.amount;
+                            return entryJSON;
+                        } else {
+                            return {};
+                        }
                     }),
                     tsum: tsum
                 }
@@ -173,10 +173,8 @@ exports.transactionCreate = (req, res, next) => {
             valuesForInsert.push(element.userid, element.amount);
             i++;
         });
-        console.log(statementPartition);
-        console.log(valuesForInsert);
 
-        db.any(statement, values)
+        db.any(statementPartition, valuesForInsert)
         .then(() => {
             res.status(201).json({
                 message: 'Successfully created transaction',
@@ -248,7 +246,7 @@ exports.transactionGetDetail = (req, res, next) => {
     const transactionId = req.params.transactionId;
     const statement = "SELECT transactionid, journeyid, timestamp, description, currencyid, categoryid, array_agg(" + '\'{"userid": \' || userId || \', "amount": \' || amount::money::numeric::float8 || \'}\''+ ") AS data " +
                         "FROM public.transaction " +
-                        "JOIN public.userInTransaction USING (journeyid, transactionid) " +
+                        "LEFT JOIN public.userInTransaction USING (journeyid, transactionid) " +
                        "WHERE journeyid IN ( "+ journeySelect + " ) AND transactionid = $3" +
                     "GROUP BY transactionid, journeyId; ";
 
@@ -267,8 +265,12 @@ exports.transactionGetDetail = (req, res, next) => {
             description: transaction.description,
             data: transaction.data.map(entry => {
                 entryJSON = JSON.parse(entry);
-                tsum += entryJSON.amount;
-                return entryJSON;
+                if (entryJSON) {
+                    tsum += entryJSON.amount;
+                    return entryJSON;
+                } else {
+                    return {};
+                }
             }),
             tsum: tsum
         }
@@ -282,16 +284,118 @@ exports.transactionGetDetail = (req, res, next) => {
     });
 }
 
+/**
+ * @title PATCH transaction Details Route
+ *
+ * @desc Used to update all details to given transaction
+ *
+ * @method PATCH
+ *
+ * @url /journey/:journeyId/transaction/:transactionid
+ * @data Array of properties [{"propname": "...", "value": "..."}])
+ * @data (Header) Bearer token
+ *
+ * @success-code 200
+ * @success-content
+ * {
+ *   message: 'Successfully updated transaction details',
+ *   transaction: resultObject
+ * }  
+ *
+ * @error-code 500
+ * @error-content
+ * {
+ *   message: 'Error Message'
+ * }
+ * 
+ * @sample-call
+ * 
+ * [
+ * 	{"propName": "currencyId", "value": "2"},
+ * 	{"propName": "categoryId", "value": "2"},
+ * 	{"propName": "description", "value": "new descr"}			
+ * ]
+ * 
+ */
+
 exports.transactionPatch = (req, res, next) => {
-    res.status(200);
-    res.json({
-        message: 'Success Endpoint test'
+    const transactionId = req.params.transactionId;
+    
+    const values = [req.journeyData.id, req.userData.userId, transactionId];
+
+    var updateOpsStr = " ";
+    var i = 4;
+    for (const ops of req.body) {
+        if (i != 4) {
+            updateOpsStr += ", ";
+        }
+        updateOpsStr += " " + ops.propName + "=$" + i++;
+        values.push(ops.value);
+    }
+
+    const statement = 'UPDATE public.transaction SET' +
+                        helper.escapeHtml(updateOpsStr) + 
+                       ' WHERE journeyid IN (' + journeySelect + ')' +
+                       ' AND transactionid = $3 ' +
+                       " RETURNING journeyID, currencyId, categoryId, description;";
+
+    console.log(statement);
+
+    db.one(statement, values)
+    .then((result) => {res.status(200).json({
+            message: 'Successfully updated transaction details',
+            transaction: result        
+        })
     })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({
+            error: err.message
+        });
+    });
 }
 
+
+/**
+ * @title Delete Transaction Route
+ *
+ * @desc Used to Delete a given Transaction (No Admin-rights needed)
+ *
+ * @method DELETE
+ *
+ * @url /journey/:journeyId/transaction/:transactionid
+ * @data (Header) Bearer token
+ *
+ * @success-code 200
+ * @success-content
+ * {
+ *     "message": "Successfully removed transaction",
+ *     "rowCount": 1
+ * }
+ *
+ * @error-code 500
+ * @error-content
+ * {
+ *   message: 'Error Message'
+ * }
+ * 
+ */
 exports.transactionDelete = (req, res, next) => {
-    res.status(200);
-    res.json({
-        message: 'Success Endpoint test'
+    const transactionId = req.params.transactionId;
+    
+    const statement = "DELETE FROM public.transaction WHERE journeyid IN ( "+ journeySelect + " ) AND transactionid = $3 RETURNING journeyID;"; // on delete cascade
+    const values = [req.journeyData.id, req.userData.userId, transactionId];
+
+    db.one(statement, values)
+    .then((result) => {res.status(200).json({
+            message: 'Successfully removed transaction',
+            rowCount: result.rowCount        
+        })
     })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({
+            error: err.message
+        });
+    });
 }
