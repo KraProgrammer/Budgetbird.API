@@ -332,8 +332,7 @@ message: 'Error Message'
     - **Code:** 200<br>**Content:**
       ```
         {
-            message: 'Successfully remove user from journey',
-            journey: resultObject
+            message: 'Successfully remove user from journey'
         }
       ```
   
@@ -381,6 +380,8 @@ message: 'Error Message'
 
 - **Data Params**
 
+  
+    `Array of properties [{"propname": "...", "value": "..."}])`
   
     `(Header) Bearer token`
   
@@ -960,11 +961,313 @@ message: 'Error Message'
     - **Code:** 200<br>**Content:**
       ```
         {
-            "count": 5,
+            "count": 1,
             "transactions": [{
+                "transactionID": 1,
+                "journeyId": 5,
+                "timestamp": "2018-01-09T19:14:33.401Z",
+                "currencyId": 1,
+                "categoryId": 1,
+                "description": "desc1",
+                "data": [{
+                    "userid": 1,
+                    "amount": 10
+                },
+                {
+                    "userid": 2,
+                    "amount": 20
+                }],
+                "tsum": 30
+            }],
+            "sum": 30
+        }
+      ```
+  
 
+
+
+- **Error Response:**
+
+  
+    * **Code:** 500<br>**Content:**
+      `{
+message: 'Error Message'
+}`
+  
+
+
+
+<br>
+
+
+## New Transaction Route ##
+
+
+  #### Used to create a new transaction ####
+
+
+
+* **URL**
+
+  
+    `/journey/:journeyId/transaction`
+  
+
+
+
+* **Method:**
+
+  
+    `POST`
+  
+
+
+
+
+
+- **Data Params**
+
+  
+    `description`
+  
+    `currencyid`
+  
+    `categoryid`
+  
+    `partition = [{"userid": number, "amount": number}]`
+  
+    `(Header) Bearer token`
+  
+
+
+
+- **Success Response:**
+
+  
+    - **Code:** 201<br>**Content:**
+      ```
+        {
+            message: 'Successfully created transaction',
+            createdTransaction: resultObject,
+            request: {
+                type: 'GET',
+                url: http: //localhost:3000//journey/:journeyId/transaction
             }
-            }
+      ```
+  
+
+
+
+- **Error Response:**
+
+  
+    * **Code:** 500<br>**Content:**
+      `{
+message: 'Error Message'
+}`
+  
+
+
+
+<br>
+
+
+## Transaction Detail Route ##
+
+
+  #### Used get all details to a transaction of a journey ####
+
+
+
+* **URL**
+
+  
+    `/journey/:journeyId/transaction/:transactionid`
+  
+
+
+
+* **Method:**
+
+  
+    `GET`
+  
+
+
+
+
+
+- **Data Params**
+
+  
+    `(Header) Bearer token *`
+  
+
+
+
+- **Success Response:**
+
+  
+    - **Code:** 200<br>**Content:**
+      ```
+        {
+            "transactionID": 1,
+            "journeyId": 5,
+            "timestamp": "2018-01-09T19:14:33.401Z",
+            "currencyId": 1,
+            "categoryId": 1,
+            "description": "desc1",
+            "data": [{
+                "userid": 1,
+                "amount": 10
+            },
+            {
+                "userid": 2,
+                "amount": 20
+            }],
+            "tsum": 30
+        }
+      ```
+  
+
+
+
+- **Error Response:**
+
+  
+    * **Code:** 500<br>**Content:**
+      `{
+message: 'Error Message'
+}`
+  
+
+
+
+<br>
+
+
+## PATCH transaction Details Route ##
+
+
+  #### Used to update all details to given transaction ####
+
+
+
+* **URL**
+
+  
+    `/journey/:journeyId/transaction/:transactionid`
+  
+
+
+
+* **Method:**
+
+  
+    `PATCH`
+  
+
+
+
+
+
+- **Data Params**
+
+  
+    `Array of properties [{"propname": "...", "value": "..."}])`
+  
+    `(Header) Bearer token`
+  
+
+
+
+- **Success Response:**
+
+  
+    - **Code:** 200<br>**Content:**
+      ```
+        {
+            message: 'Successfully updated transaction details',
+            transaction: resultObject
+        }
+      ```
+  
+
+
+
+- **Error Response:**
+
+  
+    * **Code:** 500<br>**Content:**
+      `{
+message: 'Error Message'
+}`
+  
+
+
+
+- **Sample Call:**
+
+  ```javascript
+    [{
+        "propName": "currencyId",
+        "value": "2"
+    },
+    {
+        "propName": "categoryId",
+        "value": "2"
+    },
+    {
+        "propName": "description",
+        "value": "new descr"
+    }]
+  ```
+
+<br>
+
+
+## Delete Transaction Route ##
+
+
+  #### Used to Delete a given Transaction (No Admin-rights needed) ####
+
+
+
+* **URL**
+
+  
+    `/journey/:journeyId/transaction/:transactionid`
+  
+
+
+
+* **Method:**
+
+  
+    `DELETE`
+  
+
+
+
+
+
+- **Data Params**
+
+  
+    `(Header) Bearer token`
+  
+
+
+
+- **Success Response:**
+
+  
+    - **Code:** 200<br>**Content:**
+      ```
+        {
+            "message": "Successfully removed transaction",
+            "rowCount": 1
+        }
       ```
   
 
