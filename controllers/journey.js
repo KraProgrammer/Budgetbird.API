@@ -194,7 +194,7 @@ exports.journeyGetDetails = (req, res, next) => {
                        ' FROM public.journey JOIN userinjourney USING(journeyid) WHERE journeyid = $1 AND userid=$2;'; // no admin needed
 
     const values = [id, req.userData.userId];
-
+    
     db.one(statement, values)
     .then((result) => {
         const statement = "SELECT userid, username, email FROM public.userinjourney JOIN public.alluser USING(userid) WHERE journeyid = $1;"
@@ -391,8 +391,19 @@ exports.journeyPatch = (req, res, next) => {
         if (i != 3) {
             updateOpsStr += ", ";
         }
-        updateOpsStr += " " + ops.propName + "=$" + i++;
-        values.push(ops.value);
+        if (ops.propName == 'journeyname' ||
+            ops.propName == 'startdate' ||
+            ops.propName == 'enddate' ||
+            ops.propName == 'description' ||
+            ops.propName == 'destination' ||
+            ops.propName == 'defaultcurrencyid') {
+            updateOpsStr += " " + ops.propName + "=$" + i++;
+            values.push(ops.value);
+        } else {
+            return res.status(500).json({
+                error: "Unsupported patch keyword"
+            });
+        }
     }
 
     const statement = 'UPDATE public.journey SET' +

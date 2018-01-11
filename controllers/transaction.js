@@ -329,8 +329,16 @@ exports.transactionPatch = (req, res, next) => {
         if (i != 4) {
             updateOpsStr += ", ";
         }
-        updateOpsStr += " " + ops.propName + "=$" + i++;
-        values.push(ops.value);
+        if (ops.propName == 'currencyId' ||
+            ops.propName == 'categoryId' ||
+            ops.propName == 'description') {
+            updateOpsStr += " " + ops.propName + "=$" + i++;
+            values.push(ops.value);
+        } else {
+            return res.status(500).json({
+                error: "Unsupported patch keyword"
+            });
+        }
     }
 
     const statement = 'UPDATE public.transaction SET' +
@@ -339,7 +347,6 @@ exports.transactionPatch = (req, res, next) => {
                        ' AND transactionid = $3 ' +
                        " RETURNING journeyID, currencyId, categoryId, description;";
 
-    console.log(statement);
 
     db.one(statement, values)
     .then((result) => {res.status(200).json({
