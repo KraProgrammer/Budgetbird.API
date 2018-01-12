@@ -48,6 +48,7 @@ exports.journeyGetAll = (req, res, next) => {
                 count: dataArray.length, 
                 journeys: dataArray.map(dataItem => {
                     return {
+                        journeyId: dataItem.journeyid,
                         name: dataItem.journeyname,
                         startdate: dataItem.startdate,
                         enddate: dataItem.enddate,
