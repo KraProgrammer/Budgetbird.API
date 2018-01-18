@@ -20,6 +20,7 @@ const journeySelect = "SELECT journeyid FROM public.journey JOIN public.userInJO
  *   "count": 5,
  *        "journeys": [
  *            {
+ *                "journeyid": number,
  *                "startdate": date,
  *                "enddate": date,
  *                "description": text,
