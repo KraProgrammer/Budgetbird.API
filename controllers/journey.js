@@ -192,7 +192,7 @@ exports.journeyCreate = (req, res, next) => {
 exports.journeyGetDetails = (req, res, next) => {
     // maybe union statements for better performance later
     const id = req.params.journeyId;
-    const statement = 'SELECT journeyid, journeyname, startdate, enddate, description, destination, defaultcurrencyid' + 
+    const statement = 'SELECT journeyid, journeyname, startdate, enddate, description, destination, defaultcurrencyid, isAdmin' + 
                        ' FROM public.journey JOIN userinjourney USING(journeyid) WHERE journeyid = $1 AND userid=$2;'; // no admin needed
 
     const values = [id, req.userData.userId];

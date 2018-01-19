@@ -1286,3 +1286,67 @@ message: 'Error Message'
 
 
 <br>
+
+
+## Get Categories Route ##
+
+
+  #### Used to retrieve all categories ####
+
+
+
+* **URL**
+
+  
+    `/category`
+  
+
+
+
+* **Method:**
+
+  
+    `GET`
+  
+
+
+
+
+
+- **Data Params**
+
+  
+    `(Header) Bearer token`
+  
+
+
+
+- **Success Response:**
+
+  
+    - **Code:** 200<br>**Content:**
+      ```
+        {
+            "count": 1,
+            "categories": [{
+                "categoryid": number,
+                "name": string
+            }, ...]
+        }
+      ```
+  
+
+
+
+- **Error Response:**
+
+  
+    * **Code:** 500<br>**Content:**
+      `{
+message: 'Error Message'
+}`
+  
+
+
+
+<br>
