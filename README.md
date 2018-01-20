@@ -970,7 +970,7 @@ message: 'Error Message'
                 "currencyId": 1,
                 "categoryId": 1,
                 "description": "desc1",
-                "data": [{
+                "fullamount": 30 "data": [{
                     "userid": 1,
                     "amount": 10
                 },
@@ -1118,7 +1118,7 @@ message: 'Error Message'
             "currencyId": 1,
             "categoryId": 1,
             "description": "desc1",
-            "data": [{
+            "fullamount": 30 "data": [{
                 "userid": 1,
                 "amount": 10
             },
@@ -1221,6 +1221,9 @@ message: 'Error Message'
     {
         "propName": "description",
         "value": "new descr"
+    } {
+        "propName": "fullamount",
+        "value": 30
     }]
   ```
 

@@ -27,6 +27,7 @@ const journeySelect = "SELECT journeyid FROM public.journey JOIN public.userInJO
  *             "currencyId": 1,
  *             "categoryId": 1,
  *             "description": "desc1",
+ *             "fullamount": 30
  *             "data": [
  *                 {
  *                     "userid": 1,
@@ -53,7 +54,7 @@ const journeySelect = "SELECT journeyid FROM public.journey JOIN public.userInJO
  */
 exports.transactionGetAll = (req, res, next) => {
    
-    const statement = "SELECT transactionid, journeyid, timestamp, description, currencyid, categoryid, array_agg(" + '\'{"userid": \' || userId || \', "amount": \' || amount::money::numeric::float8 || \'}\''+ ") AS data " +
+    const statement = "SELECT transactionid, journeyid, timestamp, description, currencyid, categoryid, fullamount, array_agg(" + '\'{"userid": \' || userId || \', "amount": \' || amount::money::numeric::float8 || \'}\''+ ") AS data " +
                         "FROM public.transaction " +
                         "LEFT JOIN public.userInTransaction USING (journeyid, transactionid) " +
                        "WHERE journeyid IN ( "+ journeySelect + " ) " +
@@ -78,6 +79,7 @@ exports.transactionGetAll = (req, res, next) => {
                     currencyId: transaction.currencyid, 
                     categoryId: transaction.categoryid, 
                     description: transaction.description,
+                    fullamount: transaction.fullamount,
                     data: transaction.data.map(entry => {
                         entryJSON = JSON.parse(entry);
                         if (entryJSON) {
@@ -141,16 +143,16 @@ exports.transactionGetAll = (req, res, next) => {
 
 exports.transactionCreate = (req, res, next) => {
     const statement = "INSERT INTO public.transaction(" +
-    'journeyid, "timestamp", description, currencyid, categoryid)' +
-    "VALUES ($1, now(), $3, $4, $5) " +
-    " RETURNING transactionid, journeyid, timestamp, description, currencyid, categoryid;";
+    'journeyid, "timestamp", description, currencyid, categoryid, fullamount)' +
+    "VALUES ($1, now(), $3, $4, $5, $6) " +
+    " RETURNING transactionid, journeyid, timestamp, description, currencyid, categoryid, fullamount;";
 
-    const values = [req.journeyData.id, req.userData.userId, req.body.description, req.body.currencyid, req.body.categoryid];
+    const values = [req.journeyData.id, req.userData.userId, req.body.description, req.body.currencyid, req.body.categoryid, req.body.fullamount];
     const partition = req.body.partition;
 
 
     // i am not sure if this is good design
-    if (!(req.body.description && req.body.currencyid && req.body.categoryid)) {
+    if (!(req.body.description && req.body.currencyid && req.body.categoryid && req.body.fullamount)) {
         return res.status(422).json({
             message: 'Missing argument'
         });
@@ -220,6 +222,7 @@ exports.transactionCreate = (req, res, next) => {
  *    "currencyId": 1,
  *    "categoryId": 1,
  *    "description": "desc1",
+ *    "fullamount": 30
  *    "data": [
  *        {
  *            "userid": 1,
@@ -244,7 +247,7 @@ exports.transactionCreate = (req, res, next) => {
 
 exports.transactionGetDetail = (req, res, next) => {
     const transactionId = req.params.transactionId;
-    const statement = "SELECT transactionid, journeyid, timestamp, description, currencyid, categoryid, array_agg(" + '\'{"userid": \' || userId || \', "amount": \' || amount::money::numeric::float8 || \'}\''+ ") AS data " +
+    const statement = "SELECT transactionid, journeyid, timestamp, description, currencyid, categoryid, fullamount, array_agg(" + '\'{"userid": \' || userId || \', "amount": \' || amount::money::numeric::float8 || \'}\''+ ") AS data " +
                         "FROM public.transaction " +
                         "LEFT JOIN public.userInTransaction USING (journeyid, transactionid) " +
                        "WHERE journeyid IN ( "+ journeySelect + " ) AND transactionid = $3" +
@@ -263,6 +266,7 @@ exports.transactionGetDetail = (req, res, next) => {
             currencyId: transaction.currencyid, 
             categoryId: transaction.categoryid, 
             description: transaction.description,
+            fullamount: transaction.fullamount,
             data: transaction.data.map(entry => {
                 entryJSON = JSON.parse(entry);
                 if (entryJSON) {
@@ -313,7 +317,8 @@ exports.transactionGetDetail = (req, res, next) => {
  * [
  * 	{"propName": "currencyId", "value": "2"},
  * 	{"propName": "categoryId", "value": "2"},
- * 	{"propName": "description", "value": "new descr"}			
+ * 	{"propName": "description", "value": "new descr"}	
+ *  {"propName": "fullamount", "value": 30}		
  * ]
  * 
  */
