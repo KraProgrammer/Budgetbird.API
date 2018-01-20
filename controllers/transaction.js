@@ -119,6 +119,7 @@ exports.transactionGetAll = (req, res, next) => {
  * @data description
  * @data currencyid
  * @data categoryid
+ * @data fullamount
  * @data partition = [{"userid": number, "amount": number}]
  * @data (Header) Bearer token
  * 
@@ -152,7 +153,7 @@ exports.transactionCreate = (req, res, next) => {
 
 
     // i am not sure if this is good design
-    if (!(req.body.description && req.body.currencyid && req.body.categoryid && req.body.fullamount)) {
+    if (!(req.body.description && req.body.currencyid && req.body.categoryid && req.body.fullamount && req.body.partition)) {
         return res.status(422).json({
             message: 'Missing argument'
         });

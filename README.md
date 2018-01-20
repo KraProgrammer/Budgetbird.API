@@ -1035,6 +1035,8 @@ message: 'Error Message'
   
     `categoryid`
   
+    `fullamount`
+  
     `partition = [{"userid": number, "amount": number}]`
   
     `(Header) Bearer token`
